@@ -5,7 +5,7 @@
 \title{AR1 Simulations and Estimations}
 \usage{
 sim_sarima(n.draws = 10, n = 92, bootstrap = TRUE,
-  out_path = path.package("tdmontecarlo", "out"))
+  out_path = path.package("tdmc", "out"))
 }
 \arguments{
 \item{n.draws}{number of draws}
@@ -21,7 +21,7 @@ sim_sarima(n.draws = 10, n = 92, bootstrap = TRUE,
 AR1 Simulations and Estimations
 }
 \examples{
-out_path = path.package("tdmontecarlo", "out")
+out_path = path.package("tdmc", "out")
 # use n.draws = 1000 to replicate paper
 real_data <- sim_sarima(n.draws = 10, out_path = out_path)  
 }

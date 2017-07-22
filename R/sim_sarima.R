@@ -6,7 +6,7 @@
 #' @param bootstrap should the errors in the simulated series be bootstraped?
 #'                  (instead of drawn from a normal)
 #' @examples
-#' out_path = path.package("tdmontecarlo", "out")
+#' out_path = path.package("tdmc", "out")
 #' # use n.draws = 1000 to replicate paper
 #' sim_sarima(n.draws = 10, out_path = out_path)  
 #' @export
@@ -14,7 +14,7 @@
 sim_sarima <- function(n.draws = 10, 
                        n = 92, 
                        bootstrap = TRUE, 
-                       out_path = path.package("tdmontecarlo", "out")){
+                       out_path = path.package("tdmc", "out")){
 
 
   rd <- prepare_real_data(n.draws = n.draws, n = n, bootstrap = bootstrap)

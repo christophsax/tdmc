@@ -1,4 +1,4 @@
-Package: tdmontecarlo
+Package: tdmc
 Type: Package
 Title: Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation Methods
 Version: 0.0.1

@@ -4,7 +4,7 @@
 \alias{sim_ar1}
 \title{AR1 Simulations and Estimations}
 \usage{
-sim_ar1(n.draws = 10, n = 92, out_path = path.package("tdmontecarlo",
+sim_ar1(n.draws = 10, n = 92, out_path = path.package("tdmc",
   "out"))
 }
 \arguments{
@@ -18,7 +18,7 @@ sim_ar1(n.draws = 10, n = 92, out_path = path.package("tdmontecarlo",
 AR1 Simulations and Estimations
 }
 \examples{
-out_path = path.package("tdmontecarlo", "out")
+out_path = path.package("tdmc", "out")
 # use n.draws = 1000 to replicate paper
 real_data <- sim_ar1(n.draws = 10, out_path = out_path)  
 }
