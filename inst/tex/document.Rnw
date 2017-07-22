@@ -1052,7 +1052,7 @@ Num. obs.                       & 141          & 90           & 90           & 8
 
 \bibliographystyle{jss}
 
-\bibliography{biblio}
+\bibliography{../tex/biblio}
 
 
 \end{document}

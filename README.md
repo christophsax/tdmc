@@ -27,8 +27,11 @@ To build the paper:
 
 ```r
 setwd(out_path)
-
-browseURL(out_path)
-
+library(knitr)
+knit2pdf(system.file(package = "tdmc", "tex", "document.Rnw"))
 ```
 
+To view the paper:
+```r
+browseURL("document.pdf")
+```
