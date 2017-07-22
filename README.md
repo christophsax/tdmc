@@ -1,7 +1,4 @@
-# tdmc
-
-Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation
-Methods.
+## tdmc: Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation Methods.
 
 This R package contains all *data*, *code* and *content* to build the 
 paper. Requires R and LaTeX, which are both free and open source.
