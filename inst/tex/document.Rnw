@@ -32,6 +32,8 @@ library(tempdisagg)
 library(xtable)
 renamekey <- c("pharma" = "SAL", "imp" = "IMP", "energy" = "ENE", "constrvz"
   = "CON", "lik" = "SER")
+
+path <- system.file(package = "tdmc", "out/")
 @
 
 
@@ -399,7 +401,7 @@ relationship.}
 
 <<tab:ar1_fcy, results='asis', echo=FALSE>>=
 
-load(file = "data_ar1_RW.RData")
+load(file = paste0(path, "data_ar1_RW.RData"))
 
 methods <- c("Chow-Lin, $\\rho: -0.5$", 
              "Chow-Lin, $\\rho:  0.0$", 
