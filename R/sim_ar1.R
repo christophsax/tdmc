@@ -4,9 +4,9 @@
 #' @param n         length of the time series (in quarterts, incl 1 year foracast)
 #' @param out_path  where to save the data
 #' @examples
-#' out_path = path.package("tdmc", "out")
+#' out_path <- path.package("tdmc", "out")
 #' # use n.draws = 1000 to replicate paper
-#' real_data <- sim_ar1(n.draws = 10, out_path = out_path)  
+#' sim_ar1(n.draws = 10, out_path = out_path)  
 #' @export
 #' @importFrom reshape2 melt
 sim_ar1 <- function(n.draws = 10, n = 92, out_path = path.package("tdmc", "out")){

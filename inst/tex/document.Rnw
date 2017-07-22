@@ -1,0 +1,1058 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{natbib}
+\usepackage{graphics}
+\usepackage{amsmath}
+\usepackage[small]{titlesec}
+\usepackage[utf8]{inputenc}
+\usepackage[bf]{caption}
+\usepackage{booktabs}
+\usepackage{fullpage}
+\usepackage{setspace}
+\usepackage{pdflscape}
+\usepackage{hyperref}
+
+\usepackage{array}
+\usepackage{ragged2e}
+\newcolumntype{P}[1]{>{\RaggedRight\hspace{0pt}}p{#1}}
+
+% \usepackage{mathpazo}
+\renewcommand{\captionfont}{\small}%
+
+
+\begin{document}
+%\SweaveOpts{concordance=TRUE}
+
+<<Init, include=FALSE, echo=FALSE>>=
+opts_chunk$set(out.width = "\\textwidth", size = "footnotesize") #$
+library(ggplot2)
+library(reshape2)
+library(plyr)
+#library(forecast)
+library(tempdisagg)
+library(xtable)
+renamekey <- c("pharma" = "SAL", "imp" = "IMP", "energy" = "ENE", "constrvz"
+  = "CON", "lik" = "SER")
+@
+
+
+\onehalfspacing
+
+\title{A Monte-Carlo Evaluation of Regression-Based \\Temporal Disaggregation Methods}
+\author{Christoph Sax\thanks{Contact Address: University of Basel, Peter Merian-Weg 6, 4002 Basel, Switzerland. I would like to thank Peter Steiner, Tommaso Di Fonzo, Bruno Parnisari, Ronald Indergand, Stefan Leist and seminar participants at the CFE Conference 2014 in Pisa, Italy. This reasearch was funded by the State Secretariat for Economic Affairs SECO, Switzerland.}\\
+University of Basel}
+\date{July 2017}
+
+\maketitle \thispagestyle{empty}
+
+\abstract{\noindent Using Monte-Carlo Simulations, this paper evaluates 
+regression-based methods for temporal disaggregation (Chow-Lin, Fernandez,
+Litterman and dynamic Chow-Lin) as well as procedures for estimating the
+autoregressive parameter that is used by some of these methods (max-log, 
+min-RSS).
+
+In a first exercise, time series are simulated that are consistent with the
+simplifying theoretical assumptions of the methods. In a second exercise, real-world SARIMA processes are simulated and used for evaluation.
+
+In line with the theoretical expectations, Chow-Lin performs best for
+cointegrated series, Litterman or Fernandez for non-cointegrated series.
+Somewhat surprisingly, the dynamic extension of Chow-Lin under-performs in both cases. If there is no a priori knowledge on the degree of cointegration, the Chow-Lin
+method with a slightly modified max-log algorithm for finding the autoregressive
+parameter leads to best results.
+
+}
+
+\newpage
+
+\section{Introduction}
+
+Temporal disaggregation methods are used to disaggregate low frequency time
+series to higher frequency series, while either the sum, the average, the first
+or the last value of the resulting high frequency series is consistent with the
+low frequency series. In many European countries (e.g. France, Italy,
+Switzerland), quarterly figures of Gross Domestic Product (GDP) are estimated by
+temporal disaggregation methods. Together with the selection of the indicator
+series, the choice of the disaggregation method is essential for the quality of
+both inter- and extrapolation of quarterly GDP.
+
+Using Monte Carlos simulations, this paper evaluates the standard 
+regression-basedmethods for temporal disaggregation: \textbf{Chow-Lin}
+\citep{ChowLin1971}, with different algorithms for determining the
+autoregressive parameter \citep{BournayLaroque1979, BarboneBodoVisco1981},
+\textbf{Fernandez} \citep{Fernandez1981}, \textbf{Litterman}
+\citep{Litterman1983} and a \textbf{dynamic Chow-Lin} formulation by
+\citet{santos01}. The inclusion of Kalman-filter-based methods
+\citep{proietti06} is beyond the scope of this paper.
+
+Two simulation exercises are performed. In a first exercise, time series are
+simulated that are consistent with the simplifying theoretical assumptions of
+the methods. In a second exercise, a range of real-world seasonal autoregressive integrated moving average (SARIMA) processes are simulated. These processes are not consistent with the theoretical assumptions
+of the methods. The processes are chosen by analyzing actual data, where both
+the true series and the indicator series is available on a quarterly level.
+SARIMA models are estimated both for the quarterly error term as well as for the
+quarterly indicators.
+
+Both exercises show that the degree of cointegration in the series pairs is crucial
+for the outcome of the forecast competition. Litterman and Fernandez performs
+best with non-cointegrated, Chow-Lin with cointegrated series. This
+finding does not depend on whether the residuals follow the simplified processes that
+are implied by the models or whether real-world SARIMA processes are considered.
+If there is no a priori knowledge on the degree of cointegration, the Chow-Lin
+method with a slightly modified max-log algorithm for finding the autoregressive
+parameter leads to best results.
+
+There are some empirical studies on the performance of temporal disaggregation
+methods in the literature. \citet{Litterman1983} has compared his method to
+different Chow-Lin methods using a few real time series. In a Monte Carlo
+experiment, \citet{miralles03} have evaluated the interpolation accuracy of
+Chow-Lin methods in detail. In a similar experiment, a study by
+\citet{ciammola05} has evaluated different disaggregation methods. This paper
+largely confirms and extends the findings of these last two papers.
+
+The paper is organized as follows: The first section describes and discusses the
+methods evaluated in this paper. Section~\ref{cha:setup} explains the set-up of
+the Monte Carlo simulations. Section~\ref{cha:results} describes the results.
+The final section summarizes the results and formulates practical
+recommendations for the use of disaggregation methods.
+
+
+\section{Methods to Evaluate}\label{cha:methods}
+
+The aim of temporal disaggregation is to find an unknown high frequency series,
+$y$, whose sums, averages, first or last values are consistent with a known low
+frequency series, $y_l$ (The subscript $l$ denotes low frequency variables). In
+order to estimate $y$, one or more high frequency indicator variables can be
+used. For the ease of exposition, the terms annual and quarterly will be used
+instead of low frequency and high frequency. For a more extensive discussion
+using the same notation, see \citet{sax13}.
+
+The basic assumption of Chow-Lin, Fernandez and Litterman is that the
+relationship between the annual values of the true series and the indicator
+series also holds on a quarterly level. The methods perform a Generalized Least
+Squares Regression (GLS) of the annual values on the annualized quarterly
+indicator series and use the estimated coefficients to calculate at preliminary
+estimation of the true quarterly series. The GLS estimator is defined as
+follows:
+
+\begin{equation}\label{eq:GLS}
+   \hat{\beta}(\Sigma) = \left[ X' C' ( C \Sigma
+C' )^{-1} C X \right]^{-1}  X' C' ( C \Sigma C' )^{-1} y_l  \,. 
+\end{equation}
+
+where $X$ is a matrix with one or more quarterly indicator variables, including
+a constant. $C$ is the conversion matrix that aggregates quarterly series to
+annual series; for flow series, it is defined as the Kronecker product, $I_{n_l}
+\otimes [1, 1, 1,1]$; for quarterly index series, the result is multiplied by
+$0.25$. $\Sigma$ is the quarterly variance-covariance matrix, while $C \Sigma
+C'$ is its annual equivalent.
+
+With the regression coefficients at hand, a preliminary quarterly series,
+$\hat{\beta}X$, can be calculated. The final quarterly series is constructed as:
+%
+\begin{equation}\label{eq:decomp}   
+\hat{y} = \hat{\beta}X + D \hat{u_l}  \,. 
+\end{equation}
+%
+where $\hat{u_l}$ is a vector containing the remaining differences between the
+annualized values of $\hat{\beta}X$ and the actual annual values, $y_l$
+($\hat{u_l} \equiv \ y_l - C \hat{\beta}X$). $D$ is the distribution matrix, a
+function of the same variance-covariance matrix that was used in the GLS
+estimation, $\Sigma$: 
+%
+
+
+\begin{equation} \label{eq:DStandard}
+  D = \Sigma \, C' (C\,\Sigma \,C')^{-1} \,.
+\end{equation}
+
+\begin{table}
+\centering
+\caption{\label{tab:methods} Temporal Disaggregation Methods to Evaluate}
+{\small
+\begin{tabular}{lll}
+  \toprule
+  Methods               & Parameter          & Remarks                  \\
+    \midrule               
+  Chow-Lin              & fixed $\rho$       &                          \\
+  Dynamic               & fixed $\rho$       &                          \\
+  Fernandez             & $\phi = 0$         &                          \\
+  Litterman             & fixed $\phi$       &                          \\
+  \midrule                                  
+  Chow-Lin              & max-log            &                          \\
+  Chow-Lin              & min-RSS            &                          \\
+  Chow-Lin              & max-log            & trunc. $\rho > 0.2$      \\
+  Dynamic               & max-log            &                          \\
+  Dynamic               & min-RSS            &                          \\
+  Dynamic               & max-log            & trunc. $\rho > 0.2$      \\
+  Litterman             & max-log            &                          \\
+  Litterman             & min-RSS            &                          \\
+  Litterman             & max-log            & trunc. $\phi > 0.2$      \\
+  \bottomrule
+\end{tabular}
+}
+\end{table}
+
+The methods differ in how the variance-covariance matrix, $\Sigma$, is
+constructed. Chow-Lin assumes that the quarterly residuals follow an
+autoregressive process of order 1 (AR1), i.e., $u_t = \rho u_{t-1} +
+\epsilon_t$, where $\epsilon $ is $\mathrm{WN}(0, \sigma_\epsilon)$ (with
+$\mathrm{WN}$ denoting White Noise) and $\left|\rho\right| < 1$. Fernandez and
+Litterman assume that the residuals follow a non-stationary process, i.e., $u_t =
+u_{t-1} + v_t$, where $v$ is an AR1 $(v_t = \phi v_{t-1} + \epsilon_t$, where
+$\epsilon$ is $\mathrm{WN}(0, \sigma_\epsilon))$. Fernandez is a special case of
+Litterman, where $\phi = 0$, and, therefore, $u$ follows a random walk. An
+Overview of the methods evaluated in this paper is given in Table
+\ref{tab:methods}.
+
+There are several ways to estimate the (quarterly) autoregressive parameter
+$\rho$ or $\phi$ in the Chow-Lin and Litterman methods from the annual data.
+\citet[p. 23]{BournayLaroque1979} suggest the maximization of the likelihood of
+the GLS-regression. Another approach is the minimization of the weighted
+residual sum of squares, as it has been suggested by
+\citet{BarboneBodoVisco1981}.
+
+As will be shown, the max-log algorithm by \citet{BournayLaroque1979} generally
+leads to good estimates of the autoregressive parameter, $\rho$. Sometimes,
+however, the algorithm fails dramatically and produces a strong negative
+estimation, when the true parameter is in fact positive. These negative
+estimations not only decrease its forecast accuracy, they also increase the in-
+sample volatility of the series. A reasonable workaround is the truncation of
+the estimation to 0 or to a low positive value, like 0.2. A positive value,
+rather than a value of 0, has the advantage that the residuals will be 
+distributed smoothly among the quarters.
+
+\section{Simulation Set-Up}\label{cha:setup}
+
+For the simulation experiment, a quarterly \emph{indicator series} and a
+\emph{true series} are required. The true quarterly series is aggregated to an
+annual series, which is observable to the disaggregation method. The method
+attempts to estimate the true series using the indicator series.
+
+Consistent with the theoretical structure of the disaggregation methods
+discussed in section \ref{cha:methods}, the true relationship between the
+quarterly indicator series, $x$, and the true quarterly series of interest, $y$,
+is assumed to be the following:
+
+\begin{equation} 
+  y = \beta_0 + \beta_1 x + u 
+\end{equation} 
+%
+where $u$ is a stationary or non-stationary error term. In the simulations, a
+single indicator series, $x$, is used, thus the difference in notation to the
+previous section. The true annual series, $y_l$, is calculated the following
+way:
+%
+\begin{equation} 
+  y_l = Cy 
+\end{equation} 
+where $C$ is defined as in the previous section.
+
+In order to set up the simulation, a quarterly indicator series, $x$, and a
+quarterly error series, $u$, are simulated. Together, these variables determine
+the quarterly true series, $y$. In the following, two main Monte Carlo
+experiments have been performed. In a first experiment, time series are
+simulated that are consistent with the simplifying theoretical assumptions of
+the methods. In a second experiment, several real-world SARIMA processes are
+simulated and used for evaluation, both with cointegrated and non-cointegrated
+time series.
+
+
+\begin{landscape}
+\centering 
+\captionof{table}{\label{tab:overview}Overview of the Simulation Set-Up\vspace{0.5cm}}
+\begin{tabular}{P{0.4cm}@{}P{3.7cm}P{6.8cm}P{6.8cm}P{4cm}}
+\toprule
+  & Simulation Steps            & AR1 simulations                                                                                                              & real-world SARIMA simulations & Outcome  \\
+\midrule
+1 & Template series             & --                                                                                                                           & Selection of suitable pairs of quarterly template series, Series 1 representing the true series (Table \ref{tab:sarima}, Col. 2), Series 2 the indicator (Table \ref{tab:sarima}, Col. 3). & Template series  \\[1em]
+2 & Inter-series relationship   & By assumption: $\beta_0 = 10$, $\beta_1 = 0.5$                                                                               & OLS Regression of Series 2 on Series 1 (Table \ref{tab:reglevel})                                                                                                                          & Coefficients $\beta_0$, $\beta_1$  \\[1em]
+3 & Template residuals          & --                                                                                                                           & Regression residuals from Step 2                                                                                                                                                           & Template residual series  \\[1em]
+4 & Model selection             & By assumption: Indicator follows a random walk, residual series an AR1 or a (autoregressive) random walk.                    & Residuals from Step 3 and indicator series from Step 1 serve as a template for the SARIMA model selection.  (Table \ref{tab:sarima}, Col. 4, 5)                                            & Time series models describing indicator and residual series  \\
+\midrule
+5 & Simulation                  & \multicolumn{2}{l}{ Simulation of the models from Step 4                                                                     }                                                                                                                                                                                            & 1000 artificial quarterly indicator series, $x$, and residual series, $u$  \\[1em]
+6 & True series                 & \multicolumn{2}{l}{$y = \beta_0 + \beta_1 x + u$                                                                             }                                                                                                                                                                                            & 1000 artifical quarterly true series, $y$.  \\[1em]
+7 & Aggregation                 & \multicolumn{2}{l}{$y_l = Cy$                                                                                                }                                                                                                                                                                                            & Annual series, $y_l$  \\[1em]
+8 & Disaggregation              & \multicolumn{2}{l}{Disaggregation methods are applied to the annual series, $y_l$, and the indicator series, $x$.            }                                                                                                                                                                                            & Disaggregated series, $\hat{y}$  \\[1em]
+9 & Evaluation                  & \multicolumn{2}{l}{The disaggregated series, $\hat{y}$, are compared to the quarterly true series, $y$. (Tables \ref{tab:ar1_fcy} to \ref{tab:sarima_fci})                      }                                                                                                                                                                                            & Benchmarking statistics  \\
+\bottomrule
+\end{tabular}
+\end{landscape}
+
+
+\subsection{Autoregressive Models of Order 1}
+
+The methods discussed in section \ref{cha:methods} differ in their theoretical
+assumptions about the behavior of the error term, $u$. As a starting point,
+series are simulated that are in line with the theoretical assumptions of the
+models. The error term, $u$, is simulated as an AR1 process, using $\rho$ values
+from -0.5 to 0.85, or as a random walk with an autoregressive innovation term,
+$\phi$, using values from 0 to 0.85. Together, this yields various stationary
+and non-stationary processes (Table \ref{tab:overview}, Steps 2 and 4). The
+simulated series have a length of 92, a typical length of an indicator series in
+GDP estimation.
+
+A simulated random walk process is used as an indicator series, $x$. In each run
+of the experiment, both a new indicator series and a new error term series is
+drawn (Step 5). As it turns out, the modeling of $x$ is of minor importance.
+Different specifications are used as a robustness check, without altering the
+outcome of the performance evaluation.
+
+\subsection{real-world SARIMA Processes}
+
+In a second exercise, the simulations are repeated with real-world SARIMA
+processes, which are not consistent with the theoretical assumptions of the
+methods. The processes are based on real series, similar to the ones used for
+quarterly GDP estimation. Because the relationship is modeled on a quarterly
+base, series have to be found that are available on a quarterly base (Table
+\ref{tab:overview}, Step 1). Table \ref{tab:sarima} shows the five indicator
+series that are used as a series template in the experiment. They include processes
+that reflect both economic activity and prices. Also, they include processes
+with a strong seasonal pattern and processes without a seasonal pattern.
+
+In a next step, the pairs of series are regressed on each other (see Table
+\ref{tab:reglevel} in the appendix). The regressions are used both to optain
+estimated coefficients of the series relationship (Table \ref{tab:overview},
+Step 2) and to optain residuals that serve as a template for the SARIMA modeling
+of the error term (Table \ref{tab:overview}, Step 3). Of the five error term
+processes, three SARIMA models are stationary, two are not. Three pairs of
+series are thus cointegrated, two are not. All error terms also have a seasonal
+structure.
+
+\begin{table}
+\centering
+\caption{\label{tab:sarima} Template series for SARIMA modeling. The residual
+model is based on the residuals from the regressions of the true series on the
+indicator series, shown in Table \ref{tab:reglevel}.}
+{\small
+\begin{tabular}{P{1.0cm}P{3.8cm}P{3.8cm}ll}
+  \toprule
+  Abbr.      & True Series                              & Indicator Series                         & Indicator        & Residual           \\
+  \midrule
+  \multicolumn{5}{l}{\textbf{Cointegrated Series}}                                                                                        \\[0.5em]  
+  SAL        & Sales of Chemicals and Pharmaceuticals   & Exports of Chemicals and Pharmaceuticals & (0,1,2)(0,1,1)   & (2,0,3)(1,0,1)       \\[0.5em]
+  IMP        & Imports of Chemicals and Pharmaceuticals & Total Imports                            & (0,1,0)(1,0,0)   & (1,0,2)(1,0,1)       \\[0.5em]
+  ENE        & Consumer Prices Energy                   & Consumer Prices Oil                      & (1,0,1)(2,0,0)   & (2,0,1)(2,0,0)       \\
+  \midrule
+  \multicolumn{5}{l}{\textbf{Non-cointegrated Series}}                                                                                    \\[0.5em]
+  CON        & Construction Index SBV                   & Construction Employment                  & (1,1,1)(1,0,0)   & (0,0,2)(0,1,0)       \\[0.5em]
+  SER        & Consumer Prices Services                 & Consumer Prices Total                    & (0,1,2)(0,0,0)   & (2,0,1)(0,1,1)       \\
+  \bottomrule
+\end{tabular}
+}
+\end{table}
+
+SARIMA modeling has been done by an automatic procedure implemented in the
+R-package \emph{forecast} \citep{hyndman14}. The degree of non-seasonal
+integration has been chosen by a KPSS test \citep{kwiatkowski92}, the degree of
+seasonal integration by a OCBS test \citep{osborn88}. The number of both
+seasonal and non-seasonal AR and MA terms has been chosen such that the AICc
+criterion is minimized. The coefficients are estimated by maximum likelihood.
+
+For simulations, bootstrapped errors of the true series have been used. As a
+robustness check, calculations were repeated with normally distributed errors,
+with virtually no effect on the results. Each series has been simulated 1000
+times. The length of the simulated time series is equal to the length of the
+template series, as they represent typical use cases for quarterly GDP
+estimation (see Table \ref{tab:reglevel} for the number of observations in each
+pair of series). Temporal disaggregation has been performed by the R-package
+\emph{tempdisagg} \citep{sax14}.
+
+
+\section{Results}\label{cha:results}
+
+
+\subsection{Autoregressive Models of Order 1}
+
+A central finding of the experiment is that there is no trade-off between
+quarterly and annual forecast performance: Whether one looks at the accuracy of
+the $\beta_1$-Coefficient or the annual, the quarterly or the in-sample
+forecasts, the outcome of the forecast competition is the same. In the
+following, it is generally referred to the annual forecast accuracy reported in
+Table~\ref{tab:ar1_fcy}, but the findings are fully valid for the $\beta_1$
+accuracy, the quarterly and the in-sample forecast accuracy, which can be found
+in the appendix. (The single exception concerning the performance of the max-log
+algorithm is discussed below.) Accuracy is measured by the root mean squared
+error (RMSE), but all findings in this paper also apply to mean absolute errors
+(not reported).
+
+In line with expectations, the methods using the true autoregressive parameter
+($\rho$ or $\phi$) are performing best. This serves as a basic sanity check both
+for the disaggregation methods and for the simulation design. In practice,
+however, the true parameter is rarely known, nor is the degree of cointegration.
+
+Of the automatic methods, Chow-Lin with a truncated max-log algorithm performs
+best for cointegrated series, while Litterman with an unrestricted max-log
+algorithm performs best for non-cointegrated series. However, unless the first
+difference autoregressive parameter, $\phi$, is not close to 1, Chow-Lin with a
+truncated max-log algorithm still performs well in the case of non-cointegrated
+series. In contrast, Litterman with a non-truncated max-log algorithm performs
+badly for cointegrated series.\footnote{The non-truncated max-log algorithm is
+still better than the truncated here, because negative estimation values of
+$\phi$ are a crude way to deal with cointegrated series in a non-cointegrated
+context. With a negative autoregressive parameter, errors are reverted in the
+following period, therby bringing the level of the series back to the long-term
+relationship.}
+
+<<tab:ar1_fcy, results='asis', echo=FALSE>>=
+
+load(file = "data_ar1_RW.RData")
+
+methods <- c("Chow-Lin, $\\rho: -0.5$", 
+             "Chow-Lin, $\\rho:  0.0$", 
+             "Chow-Lin, $\\rho: 0.5$",
+             "Chow-Lin, $\\rho: 0.85$",
+             "Dynamic, $\\rho: -0.5$", 
+             "Dynamic, $\\rho:  0.0$", 
+             "Dynamic, $\\rho: 0.5$",
+             "Dynamic, $\\rho: 0.85$",
+             "Fernandez, $\\phi: 0.0$",
+             "Litterman, $\\phi: 0.5$",
+             "Litterman, $\\phi: 0.85$",
+             "Chow-Lin, max. Log.",
+             "Chow-Lin, min. RSS.",
+             "Chow-Lin, max. Log. ($\\geq 0.2$)",
+             "Dynamic, max. Log.",
+             "Dynamic, min. RSS.",
+             "Dynamic, max. Log. ($\\geq 0.2$)",
+             "Litterman, max. Log.",
+             "Litterman, min. RSS.",
+             "Litterman, max. Log. ($\\geq 0.2$)"
+             )
+
+cnames <- c("Methods", "$\\rho: -0.5$", "$\\rho: 0.0$", "$\\rho: 0.5$", 
+            "$\\rho: 0.85$", "$\\phi:0.0$", "$\\phi: 0.5$", "$\\phi: 0.85$")
+
+cap.ar1 <- paste0("(RMSE, $n = ", n.draws, 
+                  "$, $\\beta_0 = ",
+                  beta[1], "$, $\\beta_1 = ", beta[2], "$)")
+
+
+tab.digits <- 2
+
+### Table
+tab <- ddply(dfy, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ] #$
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:7)] <- paste0("\\textbf{", tt1[cbind(wm, 1:7)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:7)] <- paste0("\\textbf{", tt2[cbind(wm, 1:7)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+levels(tab.show$method) <- methods #$
+colnames(tab.show) <- cnames
+xt <- xtable(tab.show, caption = "Annual forecast accuracy (RMSE) for AR1/RW processes",
+             label = "tab:ar1_fcy", digits = tab.digits, align = c("l", "l", "r", "r", "r", "r", "r", "r", "r"))
+print(xt, 
+      table.placement = "tb", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+@
+
+Is there a method that is generally preferable, if there is no a priori
+knowledge on the degree of cointegration? This depends on the frequency of the
+actual occurrence of the of cointegrated and non-cointegrated series: If there
+are mostly cointegrated series to analyze, the Chow-Lin method with a truncated
+max-log algorithm generally out-performs other automated methods. If there are
+mostly non-cointegrated series to analyze, the Litterman method with a 
+non-truncated max-log algorithm isf best. However, if the frequency of the actual
+occurrence is around half-half, the Chow-Lin method with a truncated max-log
+algorithm performs substantially better than Litterman or Fernandez. This is
+because Chow-Lin max-log method performs reasonably well with non-cointegrated
+series, while Litterman or Fernandez perform not so well with cointegrated
+series.
+
+Interestingly, Chow-Lin with a non-truncated max-log method is out-performed
+by the min-RSS approach for cointegrated series with a low value of $\rho$. In
+line with the findings of \citet{ciammola05}, min-RSS performs substantially
+better when looking at in-sample accuracy. The relatively bad performance of
+the unrestricted max-log method for low $\rho$ values is due to the fact that
+even with a positive $\rho$, in a few cases, the unrestricted max-log method
+produces a negative estimation close to $-1$. These negative estimations not
+only decrease the forecast and in-sample accuracy, they also lead to a higher
+volatility of the series.
+
+A simple workaround is to truncate the estimation of the parameter to a low
+positive value, like 0.2. A positive value, rather than a value of 0, has the advantage
+that there will be no discrete steps in the final series. With truncation, the
+max-log method out-performs the min-RSS method for almost all values of $\rho$.
+Only for $\rho = 0.85$, the pseudo-estimation of the min-RSS approach is
+incidentally close to the true value, and min-RSS slightly out-performs the 
+max-log approach.
+
+Figure~\ref{fig:graph:ar1_rho} sheds light into the causes behind the
+performance differences. It shows the distributions of the $\rho$ estimation for
+different methods for different processes. Relatively unaffected by the process,
+the $\rho$ estimates of the the min-RSS method are always around 0.6 to 0.8.
+This static behavior of the estimator has also in be found by \citet{ciammola05}
+and \citet{miralles03}. This is also the reason why for $\rho = 0.85$, the 
+min-RSS has out-performed the max-log approach.
+
+On the other hand, the Chow-Lin max-log method generally provides a consistent
+estimator of the true value of the autoregressive parameter, as long as the
+series are cointegrated. If the series are non-cointegrated, the parameter is
+estimated to be close to 1, and the results will be not far away from Fernandez.
+Thus, even with non-cointegrated series, the Chow-Lin max-log method performs
+relatively well.
+
+As mentioned by \citet{ciammola05}, a low true $\rho$ causes the max-log method
+to occasionally generate negative estimations, which worsen the in- sample
+estimation accuracy substantially. However, with truncation, the values of
+$\rho$ are limited to be at least 0.2. With this modification, With truncation,
+the max-log method out-performs the other methods most of the time.
+
+<<graph:ar1_rho, echo=FALSE, fig.height=7, fig.width=12, fig.lp = "fig:", fig.cap = "Frequency of estimated $\\rho$ for different AR1/RW processes">>=
+
+dfr$process <- as.factor(dfr$process)  #$
+levels(dfr$process) <- c("rho: -0.5", "rho: 0.0", "rho: 0.5", "rho: 0.85", "phi: 0.0", "phi: 0.5", "phi: 0.85")
+
+m <- ggplot(subset(dfr, (method %in% c("xcle", "xcl", "xclt")) & process != "phi: 0.5"), aes(x = value, fill = method))
+m <- m + facet_wrap(facets = ~ process)
+m <- m + theme_minimal() + theme(legend.position = "bottom") +  
+  scale_fill_manual(values=c("#a6cee3", "#1f78b4", "#b2df8a"), 
+                       labels=c("max. Log.", "min. RSS", "max. Log. > 0.2"))
+m + geom_histogram(binwidth = 0.1, position = "identity") + theme(legend.title=element_blank())
+@
+
+
+
+
+\section{real-world SARIMA Processes}
+
+This section discusses the results of a Monte Carlos experiment, where the
+simulated series are \emph{not} consistent with the theoretical assumptions of
+the methods. As with the simpler processes, it turns out that there is no 
+trade-off between quarterly and annual forecast performance. The methods with 
+the highest annual forecast accuracy also have the highest quarterly and 
+in-sample accuracy. I will refer to the annual forecast accuracy, quarterly and
+in-sample results are found in the appendix.
+
+
+
+<<tab:sarima_fcy, results='asis', echo=FALSE>>=
+
+load(file = paste0(path, "data_SARIMA.RData"))
+
+### Table
+tab <- ddply(dfy, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]  #$
+
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:5)] <- paste0("\\textbf{", tt1[cbind(wm, 1:5)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:5)] <- paste0("\\textbf{", tt2[cbind(wm, 1:5)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+
+
+levels(tab.show$method) <- methods  #$
+
+# reorder for consitency with table 4
+tab.show <- tab.show[, c(1, 6, 4, 3, 2, 5)]
+tab.show <- rename(tab.show, renamekey)
+
+xt <- xtable(tab.show, caption = "Annual forecast accuracy (RMSE) for real-world SARIMA processes",
+             label = "tab:sarima_fcy", digits = tab.digits)
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+@
+
+
+Again, depending on whether the series are cointegrated or not, either Chow-Lin
+or Litterman performs best. Differences among the Litterman methods are
+relatively small, as long as the autoregressive parameter, $\phi$, is not close
+to one. Among the Chow-Lin methods, a higher $\rho$ works better if the series
+are non-cointegrated. If $\rho$ is close to 1, the resulting series converges to
+the results of Fernandez.
+
+Of the automatic methods, Chow-Lin with a truncated max-log algorithm does a
+good job for cointegrated series, although it is slightly out-performed by the
+min-RSS method. With the chosen cointegrated processes, the relatively fixed
+$\rho$ values that result from min-RSS may works to its advantage. However,
+fixing $\rho$ at 0.85 would lead to even better results.
+
+However, as soon as the series are non-cointegrated, the max-log method clearly
+out-performs min-RSS. The Litterman methods are slightly better for the 
+non-cointegrated series, but they are substantially worse for cointegrated 
+series.
+
+Differences between the standard max-log and the truncated max-log methods are
+very small, because the residuals show a high degree of auto-correlation.
+Therefore, negative estimations of the $\rho$ parameter are very rare, and
+truncation is barely applied.
+
+Again, if there is no a priori knowledge on the degree of cointegration, the
+best method depends on the frequency of the occurrence of each type of series
+combinations. If the frequency is around half-half, the Chow-Lin method with a
+truncated max-log approach generally out-performs the other automated methods.
+
+From the practical experience with Swiss quarterly GDP estimation, the ratio of
+cointegrated and non-cointegrated series leans towards cointegrated series.
+Based on economic judgment, visual and econometric residual analysis and out-of-
+sample forecast experiments, 14 indicator-series combinations of the production
+account have been classified as cointegrated, 6 as non-cointegrated. Formal
+cointegration tests are not very powerful with such a low number of observation,
+so the division in in cointegrated and non-cointegrated combinations of series
+is somewhat arbitrary. But even with a lower ratio of cointegrated to non-
+cointegrated series, the max-log Chow-Lin method is expected to
+out-perform Fernandez and Litterman.
+
+
+\section{Conclusions} 
+
+Using Monte Carlos Simulations, this paper evaluates different methods for
+temporal disaggregation. First, time series are simulated that are consistent
+with the simplifying theoretical assumptions of the methods. The methods are
+evaluated by their annual and sub-annual forecast accuracy, by their in-sample
+accuracy, and by their coefficient estimation accuracy. Second, several
+real-world SARIMA processes are simulated and used for evaluation, both with
+cointegrated and non-cointegrated time series.
+
+It is found that, first, Litterman and Fernandez perform best with non-
+cointegrated series (i.e. with non-stationary residuals), Chow-Lin with
+cointegrated series (i.e. with stationary residuals). This finding does not
+depend on whether the residuals follow the AR1 structure that is implied by the
+model or whether real-world SARIMA processes are considered.
+
+Second, the max-log algorithm of determining the autoregressive parameter
+\citep{BournayLaroque1979} is the only consistent estimation method. The
+alternative min-RSS approach \citep{BarboneBodoVisco1981} in its ECOTRIM
+implementation is not a consistent estimator. Rather it always leads to an
+estimation of the parameter of around 0.6 to 0.8.
+
+Third, the max-log algorithm has the undesirable feature of sometimes leading to
+a strong negative estimation of the parameter (close to -1), even when the true
+parameter is positive. This leads to a small reduction in annual forecast
+accuracy and a substantial reduction in the sub-annual forecast and in-sample
+accuracy. Negative estimates are more frequent if the true parameter is close to
+0. However, a simple truncation to positive values avoids the problem.
+
+Forth, if there is no a priori knowledge on the degree of cointegration, the
+Chow-Lin method with the max-log algorithm for finding the autoregressive
+parameter leads to good results. If series are non-cointegrated, the method
+usually estimates a high autoregressive parameter, which makes the resulting
+series close to the Fernandez result.
+
+Fifth, if there is a priori knowledge on the true autocorrelation of the
+residuals, the use of this knowledge will increase the quality of the
+estimation. Thus, economic knowledge, a visual and econometric analysis of the
+residuals and out-of-sample forecast evaluation may be used to adjust the
+estimation of the max-log algorithm.
+
+Sixth, the dynamic Chow-Lin method under-performs the static methods in all
+settings. While the reasons for the bad performance are unclear, the current
+implementation in the R-package \emph{tempdisagg} \citep{sax14} is not
+recommended for a general usage.
+
+
+
+\clearpage
+
+\appendix
+
+\section{Additional Tables: Results}
+
+\subsection{AR1 Processes}
+
+<<tab:ar1_beta, results='asis', echo=FALSE>>=
+load(file = paste0(path, "data_ar1_RW.RData"))
+
+methods <- c("Chow-Lin, $\\rho: -0.5$", 
+             "Chow-Lin, $\\rho:  0.0$", 
+             "Chow-Lin, $\\rho: 0.5$",
+             "Chow-Lin, $\\rho: 0.85$",
+             "Dynamic, $\\rho: -0.5$", 
+             "Dynamic, $\\rho:  0.0$", 
+             "Dynamic, $\\rho: 0.5$",
+             "Dynamic, $\\rho: 0.85$",
+             "Fernandez, $\\phi: 0.0$",
+             "Litterman, $\\phi: 0.5$",
+             "Litterman, $\\phi: 0.85$",
+             "Chow-Lin, max. Log.",
+             "Chow-Lin, min. RSS.",
+             "Chow-Lin, max. Log. ($\\geq 0.2$)",
+             "Dynamic, max. Log.",
+             "Dynamic, min. RSS.",
+             "Dynamic, max. Log. ($\\geq 0.2$)",
+             "Litterman, max. Log.",
+             "Litterman, min. RSS.",
+             "Litterman, max. Log. ($\\geq 0.2$)"
+             )
+
+cnames <- c("Methods", "$\\rho: -0.5$", "$\\rho: 0.0$", "$\\rho: 0.5$", 
+            "$\\rho: 0.85$", "$\\phi:0.0$", "$\\phi: 0.5$", "$\\phi: 0.85$")
+
+tab.digits <- 4
+
+cap.ar1 <- paste0("(RMSE, $n = ", n.draws, 
+                  "$, $\\beta_0 = ",
+                  beta[1], "$, $\\beta_1 = ", beta[2], "$)")
+
+### Table
+tab <- ddply(dfb, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]   #$
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:7)] <- paste0("\\textbf{", tt1[cbind(wm, 1:7)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:7)] <- paste0("\\textbf{", tt2[cbind(wm, 1:7)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+levels(tab.show$method) <- methods  #$
+colnames(tab.show) <- cnames
+xt <- xtable(tab.show, caption = "$\\beta_1$ estimation accuracy (RMSE) for AR1/RW processes",
+             label = "tab:ar1_beta", digits = tab.digits, align = "rlrrrrrrr")
+
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+@
+
+
+
+<<tab:ar1_fcq, results='asis', echo=FALSE>>=
+
+### Table
+tab <- ddply(dfq, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]  #$
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:7)] <- paste0("\\textbf{", tt1[cbind(wm, 1:7)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:7)] <- paste0("\\textbf{", tt2[cbind(wm, 1:7)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+levels(tab.show$method) <- methods  #$
+colnames(tab.show) <- cnames
+xt <- xtable(tab.show, caption = "Quarterly forcast accuracy (RMSE) for AR1/RW processes",
+             label = "tab:ar1_fcq", digits = tab.digits)
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+
+@
+
+
+
+<<tab:ar1_fci, results='asis', echo=FALSE>>=
+
+### Table
+tab <- ddply(dfi, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]  #$
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:7)] <- paste0("\\textbf{", tt1[cbind(wm, 1:7)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:7)] <- paste0("\\textbf{", tt2[cbind(wm, 1:7)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+levels(tab.show$method) <- methods  #$
+colnames(tab.show) <- cnames
+
+xt <- xtable(tab.show, caption = "In-sample forcast accuracy (RMSE) for AR1/RW processes",
+             label = "tab:ar1_fci", digits = tab.digits)
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+@
+
+
+
+
+
+\clearpage
+
+\subsection{SARIMA Processes}
+
+<<tab:sarima_fcq, results='asis', echo=FALSE>>=
+
+load(file = paste0(path, "data_SARIMA.RData"))
+
+### Table
+tab <- ddply(dfq, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]  #$
+
+
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:5)] <- paste0("\\textbf{", tt1[cbind(wm, 1:5)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:5)] <- paste0("\\textbf{", tt2[cbind(wm, 1:5)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+
+levels(tab.show$method) <- methods #$
+
+# reorder for consitency with table 4
+tab.show <- tab.show[, c(1, 6, 4, 3, 2, 5)]
+tab.show <- rename(tab.show, renamekey)
+
+xt <- xtable(tab.show, caption = "Quarterly forcast accuracy (RMSE) for real-world SARIMA processes",
+             label = "tab:sarima_fcq", digits = tab.digits)
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+
+@
+
+
+<<tab:sarima_fci, results='asis', echo=FALSE>>=
+
+### Table
+tab <- ddply(dfi, .(process, method), summarize, 
+      me = mean(value),
+      rmse = sqrt(mean(value^2)),
+      mae = mean(abs(value))
+      )
+
+
+tab.show <- dcast(tab[, c(1, 2, 4)], method ~ process, value.var = "rmse")
+tab.show <- tab.show[tab.show$method != "z2", ]  #$
+
+
+
+tt1 <- tab.show[1:11,-1]
+wm <- apply(tt1, 2, which.min)
+
+tt1 <- format(tt1, digits = tab.digits, nsmall = tab.digits)
+tt1[cbind(wm, 1:5)] <- paste0("\\textbf{", tt1[cbind(wm, 1:5)], "}")
+
+
+tt2 <- tab.show[12:20,-1]
+wm <- apply(tt2, 2, which.min)
+
+tt2 <- format(tt2, digits = tab.digits, nsmall = tab.digits)
+tt2[cbind(wm, 1:5)] <- paste0("\\textbf{", tt2[cbind(wm, 1:5)], "}")
+
+tab.show[1:11,-1] <- tt1 
+tab.show[12:20,-1] <- tt2 
+
+
+levels(tab.show$method) <- methods   #$
+
+# reorder for consitency with table 4
+tab.show <- tab.show[, c(1, 6, 4, 3, 2, 5)]
+tab.show <- rename(tab.show, renamekey)
+
+xt <- xtable(tab.show, caption = "In-sample forcast accuracy (RMSE) for real-world SARIMA processes",
+             label = "tab:sarima_fci", digits = tab.digits)
+print(xt, 
+      table.placement = "ht", 
+      add.to.row = list(pos = as.list(c(11)), 
+                        command = as.vector(c("\\midrule\n"))),
+      booktabs = T, caption.placement = "top", 
+      size = "\\footnotesize", include.rownames=FALSE, 
+      sanitize.text.function = function(x) x
+)
+@
+
+
+\clearpage
+
+
+\section{Additional Tables: Simulation Set Up}
+
+\begin{table}[!hb]
+\caption{OLS Regression in Levels ($x_t$)}
+\begin{center}
+\scriptsize
+\begin{tabular}{l c c c c c }
+\toprule
+                                & SAL & IMP & ENE & CON & SER \\
+\midrule
+(Intercept)                     & $12.80^{***}$ & $-3550.04^{***}$ & $64.66^{***}$ & $-1111.74^{**}$ & $39.09^{***}$ \\
+                                & $(0.91)$      & $(219.90)$       & $(3.11)$      & $(385.75)$      & $(3.01)$      \\
+Exports of Chemicals and Pharma & $13.31^{***}$ &                  &               &                 &               \\
+                                & $(0.10)$      &                  &               &                 &               \\
+Total Imports                   &               & $0.28^{***}$     &               &                 &               \\
+                                &               & $(0.01)$         &               &                 &               \\
+Consumer Prices Oil             &               &                  & $2.23^{***}$  &                 &               \\
+                                &               &                  & $(0.04)$      &                 &               \\
+Construction Employment         &               &                  &               & $11.15^{***}$   &               \\
+                                &               &                  &               & $(1.31)$        &               \\
+Consumer Prices Total           &               &                  &               &                 & $0.62^{***}$  \\
+                                &               &                  &               &                 & $(0.03)$      \\
+\midrule
+R$^2$                           & 0.99          & 0.96             & 0.97          & 0.44            & 0.79          \\
+Adj. R$^2$                      & 0.99          & 0.96             & 0.97          & 0.44            & 0.79          \\
+Num. obs.                       & 145           & 94               & 94            & 93              & 94            \\
+\bottomrule
+\multicolumn{6}{l}{\scriptsize{$^{***}p<0.001$, $^{**}p<0.01$, $^*p<0.05$}}
+\end{tabular}
+\normalsize
+\label{tab:reglevel}
+\end{center}
+
+\end{table}
+
+
+
+\begin{table}[!hb]
+\caption{OLS Regression in seasonal Log-Differences ($\log(x_t)-\log(x_{t-4})$)}
+\begin{center}
+\scriptsize
+\begin{tabular}{l c c c c c }
+\toprule
+                                & SAL & IMP & ENE & CON & SER \\
+\midrule
+(Intercept)                     & $0.00$       & $0.04^{***}$ & $0.01^{*}$   & $0.00$       & $0.00$       \\
+                                & $(0.01)$     & $(0.01)$     & $(0.00)$     & $(0.01)$     & $(0.00)$     \\
+Exports of Chemicals and Pharma & $0.77^{***}$ &              &              &              &              \\
+                                & $(0.06)$     &              &              &              &              \\
+Total Imports                   &              & $0.72^{***}$ &              &              &              \\
+                                &              & $(0.09)$     &              &              &              \\
+Consumer Prices Oil             &              &              & $0.58^{***}$ &              &              \\
+                                &              &              & $(0.02)$     &              &              \\
+Construction Employment         &              &              &              & $1.66^{***}$ &              \\
+                                &              &              &              & $(0.25)$     &              \\
+Consumer Prices Total           &              &              &              &              & $0.51^{***}$ \\
+                                &              &              &              &              & $(0.11)$     \\
+\midrule
+R$^2$                           & 0.53         & 0.43         & 0.88         & 0.33         & 0.20         \\
+Adj. R$^2$                      & 0.52         & 0.42         & 0.88         & 0.33         & 0.19         \\
+Num. obs.                       & 141          & 90           & 90           & 89           & 90           \\
+\bottomrule
+\multicolumn{6}{l}{\scriptsize{$^{***}p<0.001$, $^{**}p<0.01$, $^*p<0.05$}}
+\end{tabular}
+\normalsize
+\label{tab:regdiff}
+\end{center}
+\end{table}
+
+
+\clearpage
+
+
+\bibliographystyle{jss}
+
+\bibliography{biblio}
+
+
+\end{document}

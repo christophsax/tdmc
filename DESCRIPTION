@@ -8,6 +8,6 @@ Maintainer: Christoph Sax <christoph.sax@gmail.com>
 Description: Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation Methods.
 License: GPL-3
 Depends: tempdisagg, dynlm
-Imports: texreg, reshape2, forecast
+Imports: texreg, reshape2, forecast, plyr, xtable, ggplot2
 RoxygenNote: 6.0.1
 

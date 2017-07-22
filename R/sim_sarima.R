@@ -6,7 +6,7 @@
 #' @param bootstrap should the errors in the simulated series be bootstraped?
 #'                  (instead of drawn from a normal)
 #' @examples
-#' out_path = path.package("tdmc", "out")
+#' out_path <- path.package("tdmc", "out")
 #' # use n.draws = 1000 to replicate paper
 #' sim_sarima(n.draws = 10, out_path = out_path)  
 #' @export
