@@ -1,0 +1,13 @@
+Package: tdmontecarlo
+Type: Package
+Title: Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation Methods
+Version: 0.0.1
+Date: 2017-07-30
+Author: Christoph Sax
+Maintainer: Christoph Sax <christoph.sax@gmail.com>
+Description: Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation Methods.
+License: GPL-3
+Depends: tempdisagg, dynlm
+Imports: texreg, reshape2, forecast
+RoxygenNote: 6.0.1
+
