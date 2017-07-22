@@ -25,7 +25,7 @@ random_matrix <- function(type = "arima.sim", n = 120, n.draws = 1,
           z[, i] <- z.raw
         } 
       } else if (type == "simulate.Arima") {
-        z[, i] <- simulate.Arima(object = model, nsim = n, bootstrap = bootstrap)
+        z[, i] <- simulate(object = model, nsim = n, bootstrap = bootstrap)
       } else if (type == "rw") {
         z[, i] <- 500 + cumsum(model$drift + rnorm(n = n))
       } else{

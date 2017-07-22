@@ -10,15 +10,18 @@ To install, including all required R packages:
 devtools::install_github("christophsax/tdmc")
 ```
 
-To run the simulations (set `n.draws = 1000` to replicate the results in the
-paper. This will take about 2 hours on a modern laptop.):
+To run the simulations:
 
 ```r
 library(tdmc)
+# Overwrites the existing simulation output (re-install to undo)
 out_path <- system.file(package = "tdmc", "out")
 sim_ar1(n.draws = 10, out_path = out_path) 
 sim_sarima(n.draws = 10, out_path = out_path) 
 ```
+
+Set `n.draws = 1000` to replicate the results in the paper. This will take 
+about 2 hours on a laptop.
 
 To build the paper:
 

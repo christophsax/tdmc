@@ -114,6 +114,11 @@ the Monte Carlo simulations. Section~\ref{cha:results} describes the results.
 The final section summarizes the results and formulates practical
 recommendations for the use of disaggregation methods.
 
+Simulations and estimations have been performed in R. To make the analysis fully
+reproducible, all data, code and content to build this paper is available in the
+\emph{tdmc} R package, which can be easily installed from GitHub. See the 
+corresponding package page for details \citep{sax17}.
+
 
 \section{Methods to Evaluate}\label{cha:methods}
 

@@ -11,6 +11,8 @@
 #' @importFrom reshape2 melt
 sim_ar1 <- function(n.draws = 10, n = 92, out_path = system.file(package = "tdmc", "out")){
 
+  set.seed(1)
+  
   stopifnot(n.draws > 2)
 
   # --- Generate Data ------------------------------------------------------------
