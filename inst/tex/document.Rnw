@@ -224,8 +224,8 @@ As will be shown, the max-log algorithm by \citet{BournayLaroque1979} generally
 leads to good estimates of the autoregressive parameter, $\rho$. Sometimes,
 however, the algorithm fails dramatically and produces a strong negative
 estimation, when the true parameter is in fact positive. These negative
-estimations not only decrease its forecast accuracy, they also increase the in-
-sample volatility of the series. A reasonable workaround is the truncation of
+estimations not only decrease its forecast accuracy, they also increase the 
+in-sample volatility of the series. A reasonable workaround is the truncation of
 the estimation to 0 or to a low positive value, like 0.2. A positive value,
 rather than a value of 0, has the advantage that the residuals will be 
 distributed smoothly among the quarters.
@@ -643,14 +643,14 @@ truncated max-log approach generally out-performs the other automated methods.
 
 From the practical experience with Swiss quarterly GDP estimation, the ratio of
 cointegrated and non-cointegrated series leans towards cointegrated series.
-Based on economic judgment, visual and econometric residual analysis and out-of-
-sample forecast experiments, 14 indicator-series combinations of the production
-account have been classified as cointegrated, 6 as non-cointegrated. Formal
-cointegration tests are not very powerful with such a low number of observation,
-so the division in in cointegrated and non-cointegrated combinations of series
-is somewhat arbitrary. But even with a lower ratio of cointegrated to non-
-cointegrated series, the max-log Chow-Lin method is expected to
-out-perform Fernandez and Litterman.
+Based on economic judgment, visual and econometric residual analysis and 
+out-of-sample forecast experiments, 14 indicator-series combinations of the 
+production account have been classified as cointegrated, 6 as non-cointegrated.
+Formal cointegration tests are not very powerful with such a low number of
+observation, so the division in in cointegrated and non-cointegrated
+combinations of series is somewhat arbitrary. But even with a lower ratio of
+cointegrated to non-cointegrated series, the max-log Chow-Lin method is
+expected to out-perform Fernandez and Litterman.
 
 
 \section{Conclusions} 
@@ -663,8 +663,8 @@ accuracy, and by their coefficient estimation accuracy. Second, several
 real-world SARIMA processes are simulated and used for evaluation, both with
 cointegrated and non-cointegrated time series.
 
-It is found that, first, Litterman and Fernandez perform best with non-
-cointegrated series (i.e. with non-stationary residuals), Chow-Lin with
+It is found that, first, Litterman and Fernandez perform best with 
+non-cointegrated series (i.e. with non-stationary residuals), Chow-Lin with
 cointegrated series (i.e. with stationary residuals). This finding does not
 depend on whether the residuals follow the AR1 structure that is implied by the
 model or whether real-world SARIMA processes are considered.
