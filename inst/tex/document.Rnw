@@ -203,11 +203,14 @@ constructed. Chow-Lin assumes that the quarterly residuals follow an
 autoregressive process of order 1 (AR1), i.e., $u_t = \rho u_{t-1} +
 \epsilon_t$, where $\epsilon $ is $\mathrm{WN}(0, \sigma_\epsilon)$ (with
 $\mathrm{WN}$ denoting White Noise) and $\left|\rho\right| < 1$. Fernandez and
-Litterman assume that the residuals follow a non-stationary process, i.e., $u_t =
-u_{t-1} + v_t$, where $v$ is an AR1 $(v_t = \phi v_{t-1} + \epsilon_t$, where
+Litterman assume that the residuals follow a non-stationary process, i.e., $u_t
+= u_{t-1} + v_t$, where $v$ is an AR1 $(v_t = \phi v_{t-1} + \epsilon_t$, where
 $\epsilon$ is $\mathrm{WN}(0, \sigma_\epsilon))$. Fernandez is a special case of
-Litterman, where $\phi = 0$, and, therefore, $u$ follows a random walk. An
-Overview of the methods evaluated in this paper is given in Table
+Litterman, where $\phi = 0$, and, therefore, $u$ follows a random walk. While
+the dynamics in these models are modeled through the error term, the dynamic
+Chow-Lin method by \citet{santos01} explicitly models the dynamic structure and
+estimates the model by a simple transformation of the original Chow-Lin model.
+An Overview of the methods evaluated in this paper is given in Table
 \ref{tab:methods}.
 
 There are several ways to estimate the (quarterly) autoregressive parameter
@@ -268,7 +271,7 @@ time series.
 \captionof{table}{\label{tab:overview}Overview of the Simulation Set-Up\vspace{0.5cm}}
 \begin{tabular}{P{0.4cm}@{}P{3.7cm}P{6.8cm}P{6.8cm}P{4cm}}
 \toprule
-  & Simulation Steps            & AR1 simulations                                                                                                              & real-world SARIMA simulations & Outcome  \\
+  & Simulation Steps            & AR1 simulations                                                                                                              & Real-world SARIMA simulations & Outcome  \\
 \midrule
 1 & Template series             & --                                                                                                                           & Selection of suitable pairs of quarterly template series, Series 1 representing the true series (Table \ref{tab:sarima}, Col. 2), Series 2 the indicator (Table \ref{tab:sarima}, Col. 3). & Template series  \\[1em]
 2 & Inter-series relationship   & By assumption: $\beta_0 = 10$, $\beta_1 = 0.5$                                                                               & OLS Regression of Series 2 on Series 1 (Table \ref{tab:reglevel})                                                                                                                          & Coefficients $\beta_0$, $\beta_1$  \\[1em]
@@ -303,7 +306,7 @@ drawn (Step 5). As it turns out, the modeling of $x$ is of minor importance.
 Different specifications are used as a robustness check, without altering the
 outcome of the performance evaluation.
 
-\subsection{real-world SARIMA Processes}
+\subsection{Real-world SARIMA Processes}
 
 In a second exercise, the simulations are repeated with real-world SARIMA
 processes, which are not consistent with the theoretical assumptions of the
@@ -519,10 +522,13 @@ estimator of the true value of the autoregressive parameter, as long as the
 series are cointegrated. If the series are non-cointegrated, the parameter is
 estimated to be close to 1, and the results will be not far away from Fernandez.
 Thus, even with non-cointegrated series, the Chow-Lin max-log method performs
-relatively well.
+relatively well. This is consistent with the findings of \citet{santos01}, who
+state that although the two methods are asymptotically equivalent, the maximum
+likelihood method is often preferred since it tends to lead to more reasonable
+estimates of the parameters.
 
 As mentioned by \citet{ciammola05}, a low true $\rho$ causes the max-log method
-to occasionally generate negative estimations, which worsen the in- sample
+to occasionally generate negative estimations, which worsen the in-sample
 estimation accuracy substantially. However, with truncation, the values of
 $\rho$ are limited to be at least 0.2. With this modification, With truncation,
 the max-log method out-performs the other methods most of the time.
@@ -543,7 +549,7 @@ m + geom_histogram(binwidth = 0.1, position = "identity") + theme(legend.title=e
 
 
 
-\section{real-world SARIMA Processes}
+\section{Real-world SARIMA Processes}
 
 This section discusses the results of a Monte Carlos experiment, where the
 simulated series are \emph{not} consistent with the theoretical assumptions of
@@ -689,10 +695,10 @@ residuals and out-of-sample forecast evaluation may be used to adjust the
 estimation of the max-log algorithm.
 
 Sixth, the dynamic Chow-Lin method under-performs the static methods in all
-settings. While the reasons for the bad performance are unclear, the current
-implementation in the R-package \emph{tempdisagg} \citep{sax14} is not
-recommended for a general usage.
-
+settings. This may be due to fact that the simulation design favors the static methods, or that there are implementation issues in the R-package
+\emph{tempdisagg} \citep{sax14}. At the moment, the static methods, especially
+Chow-Lin in conjunction with a truncated max-log algorithm, seem to be be
+preferrable.
 
 
 \clearpage
