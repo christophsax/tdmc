@@ -10,9 +10,9 @@
 #' @import dynlm forecast
 prepare_real_data <- function(n.draws = 10, n = 92, bootstrap = TRUE){
 
-  n.draws = 10
-  n = 92
-  bootstrap = TRUE
+  # n.draws = 10
+  # n = 92
+  # bootstrap = TRUE
 
   set.seed(1)
 
@@ -20,13 +20,12 @@ prepare_real_data <- function(n.draws = 10, n = 92, bootstrap = TRUE){
 
   data(template)
 
-  here <- parent.frame(1)
-  assign_here <- function(x, dta){
-    assign(x, na.omit(dta[, x]), envir = here)
+  assign_two_up <- function(x, dta){
+    assign(x, na.omit(dta[, x]), envir = sys.frame(-3))
     NULL
   }
-  sapply(colnames(data_m), assign_here, dta = ta(data_m, to = "quarterly"))
-  sapply(colnames(data_q), assign_here, dta = data_q)
+  sapply(colnames(data_m), assign_two_up, dta = ta(data_m, to = "quarterly"))
+  sapply(colnames(data_q), assign_two_up, dta = data_q)
 
 
   message("--- Generate Data: CONSTRVZ ---------------------------------------")

@@ -1,10 +1,10 @@
 #' LaTeX Regression Overviews of Template Regressions
 #' 
 #' @examples
-#' regressionoverview()
+#' regression_overview()
 #' @import texreg
 #' @export
-regressionoverview <- function(){
+regression_overview <- function(){
   rd <- prepare_real_data(1)
   z <- list()
   z$level <- texreg(list(rd$m.pharma,

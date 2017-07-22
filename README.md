@@ -3,10 +3,10 @@
 Reproducible Monte-Carlo Evaluation of Regression-Based Temporal Disaggregation
 Methods.
 
-This R package contains the data, the code and the content to build the paper:
+This R package contains all *data*, *code* and *content* to build the 
+paper. Requires R and LaTeX, which are both free and open source.
 
-
-To install code and data, including all required packages:
+To install, including all required R packages:
 
 ```r
 # install.packages("devtools")   # if not installed
@@ -14,11 +14,11 @@ devtools::install_github("christophsax/tdmc")
 ```
 
 To run the simulations (set `n.draws = 1000` to replicate the results in the
-paper):
+paper. This will take about 2 hours on a modern laptop.):
 
 ```r
 library(tdmc)
-out_path <- path.package("tdmc", "out")
+out_path <- system.file(package = "tdmc", "out")
 sim_ar1(n.draws = 10, out_path = out_path) 
 sim_sarima(n.draws = 10, out_path = out_path) 
 ```
@@ -27,6 +27,8 @@ To build the paper:
 
 ```r
 setwd(out_path)
+
+browseURL(out_path)
 
 ```
 

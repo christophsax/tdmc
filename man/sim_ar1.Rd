@@ -4,8 +4,7 @@
 \alias{sim_ar1}
 \title{AR1 Simulations and Estimations}
 \usage{
-sim_ar1(n.draws = 10, n = 92, out_path = path.package("tdmc",
-  "out"))
+sim_ar1(n.draws = 10, n = 92, out_path = system.file(package = "tdmc", "out"))
 }
 \arguments{
 \item{n.draws}{number of draws}
@@ -18,7 +17,7 @@ sim_ar1(n.draws = 10, n = 92, out_path = path.package("tdmc",
 AR1 Simulations and Estimations
 }
 \examples{
-out_path = path.package("tdmc", "out")
+out_path <- system.file(package = "tdmc", "out")
 # use n.draws = 1000 to replicate paper
-real_data <- sim_ar1(n.draws = 10, out_path = out_path)  
+sim_ar1(n.draws = 10, out_path = out_path)  
 }

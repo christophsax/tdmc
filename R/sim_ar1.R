@@ -4,12 +4,12 @@
 #' @param n         length of the time series (in quarterts, incl 1 year foracast)
 #' @param out_path  where to save the data
 #' @examples
-#' out_path <- path.package("tdmc", "out")
+#' out_path <- system.file(package = "tdmc", "out")
 #' # use n.draws = 1000 to replicate paper
 #' sim_ar1(n.draws = 10, out_path = out_path)  
 #' @export
 #' @importFrom reshape2 melt
-sim_ar1 <- function(n.draws = 10, n = 92, out_path = path.package("tdmc", "out")){
+sim_ar1 <- function(n.draws = 10, n = 92, out_path = system.file(package = "tdmc", "out")){
 
   stopifnot(n.draws > 2)
 
@@ -267,7 +267,7 @@ sim_ar1 <- function(n.draws = 10, n = 92, out_path = path.package("tdmc", "out")
   dfb <- splitnames(mdb)
   dfr <- splitnames(mdr)
 
-  save(dfq, dfy, dfi, dfb, dfr, n.draws, beta, file = paste0(out_path, "data_ar1_RW.RData"))
+  save(dfq, dfy, dfi, dfb, dfr, n.draws, beta, file = file.path(out_path, "data_ar1_RW.RData"))
   
   TRUE
 }
