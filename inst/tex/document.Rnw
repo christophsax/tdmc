@@ -77,7 +77,7 @@ series, the choice of the disaggregation method is essential for the quality of
 both inter- and extrapolation of quarterly GDP.
 
 Using Monte Carlos simulations, this paper evaluates the standard 
-regression-basedmethods for temporal disaggregation: \textbf{Chow-Lin}
+regression-based methods for temporal disaggregation: \textbf{Chow-Lin}
 \citep{ChowLin1971}, with different algorithms for determining the
 autoregressive parameter \citep{BournayLaroque1979, BarboneBodoVisco1981},
 \textbf{Fernandez} \citep{Fernandez1981}, \textbf{Litterman}
@@ -116,7 +116,7 @@ the Monte Carlo simulations. Section~\ref{cha:results} describes the results.
 The final section summarizes the results and formulates practical
 recommendations for the use of disaggregation methods.
 
-Simulations and estimations have been performed in R. To make the analysis fully
+Simulations and estimations have been performed in R \citep{rcore17}. To make the analysis fully
 reproducible, all data, code and content to build this paper is available in the
 \emph{tdmc} R package, which can be easily installed from GitHub. See the 
 corresponding package page for details \citep{sax17}.
